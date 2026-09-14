@@ -23,9 +23,25 @@ const clinicSchema = new mongoose.Schema(
       trim: true,
       required: [true, "Please provide clinic address."],
     },
+    description: {
+      type: String,
+      trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+    },
+    openingHours: {
+      type: Date,
+      required: [true, "Please enter clinic opening hours."],
+    },
     logo: {
       type: String,
       default: null,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true },
