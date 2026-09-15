@@ -32,8 +32,35 @@ const clinicSchema = new mongoose.Schema(
       required: true,
     },
     openingHours: {
-      type: Date,
-      required: [true, "Please enter clinic opening hours."],
+      type: [
+        {
+          day: {
+            type: String,
+            enum: [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday",
+              "saturday",
+              "sunday",
+            ],
+          },
+          isOpen: {
+            type: Boolean,
+            default: true,
+          },
+          open: {
+            type: String,
+            trim: true,
+          },
+          close: {
+            type: String,
+            trim: true,
+          },
+        },
+      ],
+      default: [],
     },
     logo: {
       type: String,

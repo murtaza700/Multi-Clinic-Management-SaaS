@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
 
 import { auth } from "@/auth";
 import connectDB from "@/lib/db";
 
 import Clinic from "@/models/Clinic";
-import User from "@/models/User";
 
 function createSlug(name) {
   return name
@@ -23,14 +20,20 @@ export async function POST(request) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, message: "Authentication required." },
+        {
+          success: false,
+          message: "Authentication required.",
+        },
         { status: 401 },
       );
     }
 
     if (session.user.role !== "super-admin") {
       return NextResponse.json(
-        { success: false, message: "Only super admin can create a clinic." },
+        {
+          success: false,
+          message: "Only super admin can create a clinic.",
+        },
         { status: 403 },
       );
     }
@@ -39,148 +42,117 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    const { clinic: clinicData, admin: adminData } = body;
+    const { name, email, phone, address, description } = body;
 
-    if (!clinicData || !adminData) {
+    if (!name || !email || !phone || !address) {
       return NextResponse.json(
         {
           success: false,
-          message: "Clinic and admin information are required.",
+          message: "Please provide all required fields.",
         },
         { status: 400 },
       );
     }
 
-    const {
-      name: clinicName,
+    const clinicEmail = email.toLowerCase().trim();
+
+    const emailExists = await Clinic.findOne({
       email: clinicEmail,
-      phone,
-      address,
-      description,
-    } = clinicData;
-
-    const { name: adminName, email: adminEmail, password } = adminData;
-
-    if (
-      !clinicName ||
-      !clinicEmail ||
-      !phone ||
-      !address ||
-      !adminName ||
-      !adminEmail ||
-      !password
-    ) {
-      return NextResponse.json(
-        { success: false, message: "Please provide all required fields." },
-        { status: 400 },
-      );
-    }
-
-    const lowerCaseAdminEmail = adminEmail.toLowerCase().trim();
-    const lowerCaseClinicEmail = clinicEmail.toLowerCase().trim();
-
-    const isAdminEmailExists = await User.findOne({
-      email: lowerCaseAdminEmail,
     });
 
-    if (isAdminEmailExists) {
+    if (emailExists) {
       return NextResponse.json(
-        { success: false, message: "Admin email already exists." },
+        {
+          success: false,
+          message: "Clinic email already exists.",
+        },
         { status: 409 },
       );
     }
 
-    const isClinicEmailExists = await Clinic.findOne({
-      email: lowerCaseClinicEmail,
-    });
+    let slug = createSlug(name);
 
-    if (isClinicEmailExists) {
-      return NextResponse.json(
-        { success: false, message: "Clinic email already exists." },
-        { status: 409 },
-      );
-    }
+    const slugExists = await Clinic.findOne({ slug });
 
-    let slug = createSlug(clinicName);
-
-    const slugExist = await Clinic.findOne({ slug });
-    if (slugExist) {
+    if (slugExists) {
       slug = `${slug}-${Date.now()}`;
     }
 
-    const hashPassword = await bcrypt.hash(password, 10);
+    const clinic = await Clinic.create({
+      name: name.trim(),
+      email: clinicEmail,
+      phone: phone.trim(),
+      address: address.trim(),
+      description: description?.trim() || "",
+      slug,
+    });
 
-    const sessionDb = await mongoose.startSession();
-
-    try {
-      sessionDb.startTransaction();
-
-      const clinic = await Clinic.create(
-        [
-          {
-            name: clinicName,
-            email: lowerCaseClinicEmail,
-            phone,
-            address,
-            description,
-            slug,
-          },
-        ],
-        { session: sessionDb },
-      );
-
-      const createdClinic = clinic[0];
-
-      const user = await User.create(
-        [
-          {
-            name: adminName,
-            email: lowerCaseAdminEmail,
-            password: hashPassword,
-            role: "clinic-admin",
-            clinicId: createdClinic._id,
-            provider: "credentials",
-          },
-        ],
-        { session: sessionDb },
-      );
-
-      const createdAdmin = user[0];
-
-      await sessionDb.commitTransaction();
-
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Clinic and clinic admin created successfully.",
-          data: {
-            clinic: {
-              id: createdClinic._id,
-              name: createdClinic.name,
-              email: createdClinic.email,
-              slug: createdClinic.slug,
-            },
-            admin: {
-              id: createdAdmin._id,
-              name: createdAdmin.name,
-              email: createdAdmin.email,
-              role: createdAdmin.role,
-            },
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Clinic created successfully.",
+        data: {
+          clinic: {
+            id: clinic._id,
+            name: clinic.name,
+            email: clinic.email,
+            phone: clinic.phone,
+            address: clinic.address,
+            description: clinic.description,
+            slug: clinic.slug,
           },
         },
-        { status: 201 },
-      );
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") console.log(error);
-
-      await sessionDb.abortTransaction();
-      throw error;
-    } finally {
-      sessionDb.endSession();
-    }
+      },
+      { status: 201 },
+    );
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
       console.error("CREATE_CLINIC_ERROR:", error);
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal Server Error.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(request) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
+    if (session.user.role !== "super-admin") {
+      return NextResponse.json(
+        { success: false, message: "Only super admin can view clinics." },
+        { status: 403 },
+      );
+    }
+
+    await connectDB();
+
+    const clinics = await Clinic.find({}).sort({ createdAt: -1 }).lean();
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Clinics fetched successfully.",
+        count: clinics.length,
+        data: clinics,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("GET ALL CLINICS ERROR:", error);
     }
 
     return NextResponse.json(
