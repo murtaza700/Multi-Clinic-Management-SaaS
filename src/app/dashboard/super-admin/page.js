@@ -1,9 +1,9 @@
 import {
-    Building2,
-    Users,
-    Stethoscope,
-    UserRound,
-    ArrowRight,
+  Building2,
+  Users,
+  Stethoscope,
+  UserRound,
+  ArrowRight,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 
@@ -85,11 +85,6 @@ export default async function SuperAdminDashboard() {
             Overview of your clinic management system.
           </p>
         </div>
-
-        <Button>
-          Add Clinic
-          <ArrowRight />
-        </Button>
       </div>
 
       {/* Stats */}

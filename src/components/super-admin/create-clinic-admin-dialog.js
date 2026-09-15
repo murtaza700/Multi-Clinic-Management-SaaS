@@ -60,9 +60,7 @@ export default function CreateClinicAdminDialog({ clinics = [] }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to create clinic admin."
-        );
+        throw new Error(data.message || "Failed to create clinic admin.");
       }
 
       setFormData({
@@ -85,7 +83,7 @@ export default function CreateClinicAdminDialog({ clinics = [] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           Create Admin
         </Button>
@@ -117,10 +115,7 @@ export default function CreateClinicAdminDialog({ clinics = [] }) {
               <option value="">Select clinic</option>
 
               {clinics.map((clinic) => (
-                <option
-                  key={clinic._id}
-                  value={clinic._id}
-                >
+                <option key={clinic._id} value={clinic._id}>
                   {clinic.name}
                 </option>
               ))}
@@ -176,11 +171,7 @@ export default function CreateClinicAdminDialog({ clinics = [] }) {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <Button
