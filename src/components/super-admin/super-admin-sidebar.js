@@ -172,7 +172,7 @@ export default function SuperAdminSidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden h-screen w-64 shrink-0 border-r bg-background lg:block">
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 shrink-0 border-r bg-background lg:block">
         {sidebarContent}
       </aside>
 

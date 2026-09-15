@@ -16,7 +16,7 @@ export default async function SuperAdminLayout({ children }) {
         <SuperAdminSidebar />
 
         {/* Main Content */}
-        <main className="min-w-0 flex-1 lg:ml-0">
+        <main className="min-w-0 flex-1 lg:ml-64">
           <div className="min-h-screen pt-16 lg:pt-0">{children}</div>
         </main>
       </div>
