@@ -1,21 +1,39 @@
+import Link from "next/link";
+
 import LoginForm from "@/components/auth/LoginForm";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back
-          </h1>
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            Login to your account
+          <CardDescription>Login to your account.</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <LoginForm />
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-foreground underline underline-offset-4 hover:no-underline"
+            >
+              Create account
+            </Link>
           </p>
-        </div>
-
-        <LoginForm />
-      </div>
+        </CardContent>
+      </Card>
     </main>
   );
 }
